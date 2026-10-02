@@ -9,11 +9,11 @@ use Illuminate\Translation\PotentiallyTranslatedString;
 
 class UniqueRucRule implements ValidationRule
 {
-    public $user_id;
+    public $company_id;
 
-    public function __construct($user_id)
+    public function __construct($company_id = null)
     {
-        $this->user_id = $user_id;
+        $this->company_id = $company_id;
     }
 
     /**
@@ -24,7 +24,10 @@ class UniqueRucRule implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         $company = Company::where('ruc', $value)
-            ->where('user_id', $this->user_id)
+            ->where('user_id', auth()->user()->id)
+            ->when($this->company_id, function ($query, $company_id) {
+                $query->where('id', '!=', $company_id);
+            })
             ->first();
 
         if ($company) {

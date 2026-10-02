@@ -31,7 +31,7 @@ class CompanyController extends Controller
                 'required',
                 'string',
                 'regex:/^(10|20)\d{9}$/',
-                new UniqueRucRule(JWTAuth::user()->id),
+                new UniqueRucRule(),
             ],
             'direccion' => 'required|string',
             'logo' => 'nullable|image',
@@ -68,9 +68,39 @@ class CompanyController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Company $company)
+    public function update(Request $request, $company)
     {
-        //
+        $company = Company::where('ruc', $company)->where('user_id', auth()->user()->id)->firstOrFail();
+
+        $data = $request->validate([
+            'razon_social' => 'nullable|string|min:5',
+            'ruc' => [
+                'nullable',
+                'string',
+                'regex:/^(10|20)\d{9}$/',
+                new UniqueRucRule($company->id),
+            ],
+            'direccion' => 'nullable|string|min:5',
+            'logo' => 'nullable|image',
+            'sol_user' => 'nullable|string|min:5',
+            'sol_pass' => 'nullable|string|min:5',
+            'cert' => 'nullable|file|mimes:pem,txt',
+            'client_id' => 'nullable|string',
+            'client_secret' => 'nullable|string',
+            'production' => 'nullable|boolean',
+        ]);
+
+        if ($request->hasFile('logo')) {
+            $data['logo_path'] = $request->file('logo')->store('logos');
+        }
+
+        if ($request->hasFile('cert')) {
+            $data['cert_path'] = $request->file('cert')->store('certs');
+        }
+
+        $company->update($data);
+
+        return response()->json(['message' => 'Compañía actualizada exitosamente', 'company' => $company], 200);
     }
 
     /**
