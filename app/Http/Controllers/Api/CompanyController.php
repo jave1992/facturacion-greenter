@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Company;
+use App\Rules\UniqueRucRule;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -24,7 +25,12 @@ class CompanyController extends Controller
     {
         $data = $request->validate([
             'razon_social' => 'required|string',
-            'ruc' => 'required|string|max:11|unique:companies,ruc',
+            'ruc' => [
+                'required',
+                'string',
+                'regex:/^(10|20)\d{9}$/',
+                new UniqueRucRule(JWTAuth::user()->id),
+            ],
             'direccion' => 'required|string',
             'logo' => 'nullable|image',
             'sol_user' => 'required|string',
