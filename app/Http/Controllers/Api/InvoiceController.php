@@ -7,17 +7,18 @@ use App\Models\Company;
 use App\Services\SunatService;
 use Greenter\Report\XmlUtils;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class InvoiceController extends Controller
 {
     public function send(Request $request)
     {
-        $company = Company::where('user_id', auth()->user()->id)->firstOrFail();
+        $data = $request->all();
+
+        $company = Company::where('user_id', auth()->user()->id)->where('ruc', $data['company']['ruc'])->firstOrFail();
 
         $sunat = new SunatService();
         $see = $sunat->getSee($company);
-        $invoice = $sunat->getInvoice();
+        $invoice = $sunat->getInvoice($data);
 
         $result = $see->send($invoice);
 

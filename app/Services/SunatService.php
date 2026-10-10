@@ -26,92 +26,100 @@ class SunatService
         return $see;
     }
 
-    public function getInvoice()
+    public function getInvoice($data)
     {
         $invoice = (new Invoice())
-            ->setUblVersion('2.1')
-            ->setTipoOperacion('0101') // Venta - Catalog. 51
-            ->setTipoDoc('01') // Factura - Catalog. 01 
-            ->setSerie('F001')
-            ->setCorrelativo('1')
-            ->setFechaEmision(new DateTime()) // Zona horaria: Lima
+            ->setUblVersion($data['ublVersion']) // UBL 2.1
+            ->setTipoOperacion($data['tipoOperacion']) // Venta - Catalog. 51
+            ->setTipoDoc($data['tipoDoc']) // Factura - Catalog. 01
+            ->setSerie($data['serie'])
+            ->setCorrelativo($data['correlativo'])
+            ->setFechaEmision(new DateTime($data['fechaEmision'])) // Zona horaria: Lima
             ->setFormaPago(new FormaPagoContado()) // FormaPago: Contado
-            ->setTipoMoneda('PEN') // Sol - Catalog. 02
-            ->setCompany($this->getCompany())
-            ->setClient($this->getClient())
-            ->setMtoOperGravadas(100.00)
-            ->setMtoIGV(18.00)
-            ->setTotalImpuestos(18.00)
-            ->setValorVenta(100.00)
-            ->setSubTotal(118.00)
-            ->setMtoImpVenta(118.00)
-            ->setDetails($this->getDetails())
-            ->setLegends($this->getLegends());
+            ->setTipoMoneda($data['tipoMoneda']) // Sol - Catalog. 02
+            ->setCompany($this->getCompany($data['company']))
+            ->setClient($this->getClient($data['client']))
+            ->setMtoOperGravadas($data['mtoOperGravadas'])
+            ->setMtoIGV($data['mtoIGV'])
+            ->setTotalImpuestos($data['totalImpuestos'])
+            ->setValorVenta($data['valorVenta'])
+            ->setSubTotal($data['subTotal'])
+            ->setMtoImpVenta($data['mtoImpVenta'])
+            ->setDetails($this->getDetails($data['details']))
+            ->setLegends($this->getLegends($data['legends']));
 
         return $invoice;
     }
 
-    public function getCompany()
+    public function getCompany($company)
     {
         $company = (new Company())
-            ->setRuc('20123456789')
-            ->setRazonSocial('GREEN SAC')
-            ->setNombreComercial('GREEN')
-            ->setAddress($this->getAddress());
+            ->setRuc($company['ruc'])
+            ->setRazonSocial($company['razonSocial'])
+            ->setNombreComercial($company['nombreComercial'])
+            ->setAddress($this->getAddress($company['address']));
 
         return $company;
     }
 
-    public function getClient()
+    public function getClient($client)
     {
         $client = (new Client())
-            ->setTipoDoc('6') // RUC - Catalog. 06
-            ->setNumDoc('20000000001')
-            ->setRznSocial('EMPRESA X');
+            ->setTipoDoc($client['tipoDoc']) // RUC - Catalog. 06
+            ->setNumDoc($client['numDoc'])
+            ->setRznSocial($client['rznSocial']);
 
         return $client;
     }
 
-    public function getAddress()
+    public function getAddress($address)
     {
         $address = (new Address())
-            ->setUbigueo('150101')
-            ->setDepartamento('LIMA')
-            ->setProvincia('LIMA')
-            ->setDistrito('LIMA')
-            ->setUrbanizacion('-')
-            ->setDireccion('Av. Villa Nueva 221')
-            ->setCodLocal('0000'); // Codigo de establecimiento asignado por SUNAT, 0000 por defecto.
+            ->setUbigueo($address['ubigueo']) // Codigo de ubigeo - Catalog. 01
+            ->setDepartamento($address['departamento'])
+            ->setProvincia($address['provincia'])
+            ->setDistrito($address['distrito'])
+            ->setUrbanizacion($address['urbanizacion'])
+            ->setDireccion($address['direccion'])
+            ->setCodLocal($address['codLocal']); // Codigo de establecimiento asignado por SUNAT, 0000 por defecto.
 
         return $address;
     }
 
-    public function getDetails()
+    public function getDetails($details)
     {
-        $item = (new SaleDetail())
-            ->setCodProducto('P001')
-            ->setUnidad('NIU') // Catalog. 03
-            ->setDescripcion('PRODUCTO 1')
-            ->setCantidad(1)
-            ->setMtoValorUnitario(100.00)
-            ->setMtoValorVenta(100.00)
-            ->setMtoBaseIgv(100.00)
-            ->setPorcentajeIgv(18.00) // 18%
-            ->setIgv(18.00)
-            ->setTipAfeIgv('10') // Gravado - Catalog. 07
-            ->setTotalImpuestos(18.00)
-            ->setMtoPrecioUnitario(118.00);
+        $items = [];
 
-        return [$item];
+        foreach ($details as $detail) {
+            $items[] = (new SaleDetail())
+                ->setCodProducto($detail['codProducto'])
+                ->setUnidad($detail['unidad']) // Catalog. 03
+                ->setDescripcion($detail['descripcion'])
+                ->setCantidad($detail['cantidad'])
+                ->setMtoValorUnitario($detail['mtoValorUnitario'])
+                ->setMtoValorVenta($detail['mtoValorVenta'])
+                ->setMtoBaseIgv($detail['mtoBaseIgv'])
+                ->setPorcentajeIgv($detail['porcentajeIgv']) // 18%
+                ->setIgv($detail['igv'])
+                ->setTipAfeIgv($detail['tipAfeIgv']) // Gravado - Catalog. 07
+                ->setTotalImpuestos($detail['totalImpuestos'])
+                ->setMtoPrecioUnitario($detail['mtoPrecioUnitario']);
+        }
+
+        return $items;
     }
 
-    public function getLegends()
+    public function getLegends($legends)
     {
-        $legend = (new Legend())
-            ->setCode('1000') // Monto en letras - Catalog. 52
-            ->setValue('SON: CIENTO DIECIOCHO CON 00/100 SOLES');
+        $items = [];
 
-        return [$legend];
+        foreach ($legends as $legend) {
+            $items[] = (new Legend())
+                ->setCode($legend['code']) // Monto en letras - Catalog. 52
+                ->setValue($legend['value']);
+        }
+
+        return $items;
     }
 
     public function sunatResponse($result)
