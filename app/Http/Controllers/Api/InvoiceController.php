@@ -21,18 +21,14 @@ class InvoiceController extends Controller
 
         $result = $see->send($invoice);
 
-        $path_xml = 'invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.xml';
-
-        Storage::put($path_xml, $see->getFactory()->getLastXml());
+        $sunat->saveXml($company, $invoice, $see);
 
         $response = $sunat->sunatResponse($result);
 
-        $path_cdr = 'invoices/' . $company->ruc . '/' . $invoice->getName() . '/R-' . $invoice->getName() . '.zip';
-
-        Storage::put($path_cdr, $result->getCdrZip());
+        $sunat->saveCdr($company, $invoice, $result);
 
         $response['hash'] = (new XmlUtils)->getHashSign($see->getFactory()->getLastXml());
-        
+
         return response()->json([
             'result' => $response,
         ], 200);

@@ -141,4 +141,18 @@ class SunatService
 
         return $response;
     }
+
+    public function saveXml($company, $invoice, $see)
+    {
+        $path_xml = 'invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.xml';
+
+        Storage::put($path_xml, $see->getFactory()->getLastXml());
+    }
+
+    public function saveCdr($company, $invoice, $result)
+    {
+        $path_cdr = 'invoices/' . $company->ruc . '/' . $invoice->getName() . '/R-' . $invoice->getName() . '.zip';
+
+        Storage::put($path_cdr, $result->getCdrZip());
+    }
 }
