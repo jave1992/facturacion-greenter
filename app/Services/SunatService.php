@@ -113,4 +113,32 @@ class SunatService
 
         return [$legend];
     }
+
+    public function sunatResponse($result)
+    {
+        $response['success'] = $result->isSuccess();
+
+        // Verificamos que la conexión con SUNAT fue exitosa.
+
+        if (!$response['success']) {
+            // Mostrar error al conectarse a SUNAT.
+
+            $response['error'] = [
+                'code' => $result->getError()->getCode(),
+                'message' => $result->getError()->getMessage(),
+            ];
+
+            return $response;
+        }
+
+        $cdr = $result->getCdrResponse();
+
+        $response['cdrResponse'] = [
+            'code' => (int)$cdr->getCode(),
+            'description' => $cdr->getDescription(),
+            'notes' => $cdr->getNotes(),
+        ];
+
+        return $response;
+    }
 }

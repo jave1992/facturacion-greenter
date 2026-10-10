@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Services\SunatService;
+use Greenter\Report\XmlUtils;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class InvoiceController extends Controller
 {
@@ -19,42 +21,20 @@ class InvoiceController extends Controller
 
         $result = $see->send($invoice);
 
-        // Guardar XML firmado digitalmente.
-        // file_put_contents(
-        //     $invoice->getName() . '.xml',
-        //     $see->getFactory()->getLastXml()
-        // );
+        $path_xml = 'invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.xml';
 
-        // Verificamos que la conexión con SUNAT fue exitosa.
-        if (!$result->isSuccess()) {
-            // Mostrar error al conectarse a SUNAT.
-            echo 'Codigo Error: ' . $result->getError()->getCode();
-            echo 'Mensaje Error: ' . $result->getError()->getMessage();
-            exit();
-        }
+        Storage::put($path_xml, $see->getFactory()->getLastXml());
 
-        // Guardamos el CDR
-        // file_put_contents('R-' . $invoice->getName() . '.zip', $result->getCdrZip());
+        $response = $sunat->sunatResponse($result);
 
-        $cdr = $result->getCdrResponse();
+        $path_cdr = 'invoices/' . $company->ruc . '/' . $invoice->getName() . '/R-' . $invoice->getName() . '.zip';
 
-        $code = (int)$cdr->getCode();
+        Storage::put($path_cdr, $result->getCdrZip());
 
-        if ($code === 0) {
-            echo 'ESTADO: ACEPTADA' . PHP_EOL;
-            if (count($cdr->getNotes()) > 0) {
-                echo 'OBSERVACIONES:' . PHP_EOL;
-                // Corregir estas observaciones en siguientes emisiones.
-                var_dump($cdr->getNotes());
-            }
-        } else if ($code >= 2000 && $code <= 3999) {
-            echo 'ESTADO: RECHAZADA' . PHP_EOL;
-        } else {
-            /* Esto no debería darse, pero si ocurre, es un CDR inválido que debería tratarse como un error-excepción. */
-            /*code: 0100 a 1999 */
-            echo 'Excepción';
-        }
-
-        echo $cdr->getDescription() . PHP_EOL;
+        $response['hash'] = (new XmlUtils)->getHashSign($see->getFactory()->getLastXml());
+        
+        return response()->json([
+            'result' => $response,
+        ], 200);
     }
 }
