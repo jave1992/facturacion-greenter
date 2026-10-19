@@ -138,8 +138,6 @@ class InvoiceController extends Controller
 
         $hash = (new XmlUtils)->getHashSign($see->getFactory()->getLastXml());
 
-        $html = $sunat->getHtmlReport($invoice, $hash);
-
-        return $html;
+        $sunat->generatePdfReport($invoice, $hash);
     }
 }

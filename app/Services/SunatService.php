@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Company as ModelsCompany;
 use DateTime;
+use Dompdf\Dompdf;
 use Greenter\Model\Client\Client;
 use Greenter\Model\Company\Address;
 use Greenter\Model\Company\Company;
@@ -12,6 +13,7 @@ use Greenter\Model\Sale\Invoice;
 use Greenter\Model\Sale\Legend;
 use Greenter\Model\Sale\SaleDetail;
 use Greenter\Report\HtmlReport;
+use Greenter\Report\PdfReport;
 use Greenter\Report\Resolver\DefaultTemplateResolver;
 use Greenter\See;
 use Greenter\Ws\Services\SunatEndpoints;
@@ -176,16 +178,27 @@ class SunatService
         Storage::put($path_cdr, $result->getCdrZip());
     }
 
-    public function getHtmlReport($invoice, $hash)
+    public function generatePdfReport($invoice, $hash)
     {
-        $report = new HtmlReport();
-
+        $htmlReport = new HtmlReport();
         $resolver = new DefaultTemplateResolver();
-        $report->setTemplate($resolver->getTemplate($invoice));
+        $htmlReport->setTemplate($resolver->getTemplate($invoice));
+
+        $report = new PdfReport($htmlReport);
+        // Options: Ver mas en https://wkhtmltopdf.org/usage/wkhtmltopdf.txt
+        $report->setOptions([
+            'no-outline',
+            'viewport-size' => '1280x1024',
+            'page-width' => '21cm',
+            'page-height' => '29.7cm',
+        ]);
+        
+        $report->setBinPath(env('WKHTMLTOPDF')); // Ruta relativa o absoluta de wkhtmltopdf
 
         $ruc = $invoice->getCompany()->getRuc();
         $company = ModelsCompany::where('ruc', $ruc)->where('user_id', auth()->user()->id)->first();
 
+        // Los mismo parametros utilizados en HTML Report
         $params = [
             'system' => [
                 'logo' => Storage::get($company->logo_path), // Logo de Empresa
@@ -202,8 +215,14 @@ class SunatService
             ]
         ];
 
-        $html = $report->render($invoice, $params);
+        $pdf = $report->render($invoice, $params);
 
-        return $html;
+        if ($pdf === null) {
+            $error = $report->getExporter()->getError();
+            echo 'Error: ' . $error;
+            return;
+        }
+
+        Storage::put('invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.pdf', $pdf);
     }
 }
