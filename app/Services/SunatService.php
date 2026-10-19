@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Company as ModelsCompany;
 use DateTime;
 use Greenter\Model\Client\Client;
 use Greenter\Model\Company\Address;
@@ -10,6 +11,8 @@ use Greenter\Model\Sale\FormaPagos\FormaPagoContado;
 use Greenter\Model\Sale\Invoice;
 use Greenter\Model\Sale\Legend;
 use Greenter\Model\Sale\SaleDetail;
+use Greenter\Report\HtmlReport;
+use Greenter\Report\Resolver\DefaultTemplateResolver;
 use Greenter\See;
 use Greenter\Ws\Services\SunatEndpoints;
 use Illuminate\Support\Facades\Storage;
@@ -171,5 +174,36 @@ class SunatService
         $path_cdr = 'invoices/' . $company->ruc . '/' . $invoice->getName() . '/R-' . $invoice->getName() . '.zip';
 
         Storage::put($path_cdr, $result->getCdrZip());
+    }
+
+    public function getHtmlReport($invoice, $hash)
+    {
+        $report = new HtmlReport();
+
+        $resolver = new DefaultTemplateResolver();
+        $report->setTemplate($resolver->getTemplate($invoice));
+
+        $ruc = $invoice->getCompany()->getRuc();
+        $company = ModelsCompany::where('ruc', $ruc)->where('user_id', auth()->user()->id)->first();
+
+        $params = [
+            'system' => [
+                'logo' => Storage::get($company->logo_path), // Logo de Empresa
+                'hash' => $hash, // Valor Resumen 
+            ],
+            'user' => [
+                'header'     => 'Telf: <b>(01) 123375</b>', // Texto que se ubica debajo de la dirección de empresa
+                'extras'     => [
+                    // Leyendas adicionales
+                    ['name' => 'CONDICION DE PAGO', 'value' => 'Efectivo'],
+                    ['name' => 'VENDEDOR', 'value' => 'PRUEBA S.A.C.'],
+                ],
+                'footer' => '<p>Nro Resolucion: <b>3232323</b></p>'
+            ]
+        ];
+
+        $html = $report->render($invoice, $params);
+
+        return $html;
     }
 }
