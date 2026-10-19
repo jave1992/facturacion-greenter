@@ -46,6 +46,7 @@ class SunatService
             ->setMtoOperGratuitas($data['mtoOperGratuitas'])
             ->setMtoIGV($data['mtoIGV'])
             ->setMtoIGVGratuitas($data['mtoIGVGratuitas'])
+            ->setIcbper($data['icbper'])
             ->setTotalImpuestos($data['totalImpuestos'])
             ->setValorVenta($data['valorVenta'])
             ->setSubTotal($data['subTotal'])
@@ -107,6 +108,8 @@ class SunatService
                 ->setMtoBaseIgv($detail['mtoBaseIgv'])
                 ->setPorcentajeIgv($detail['porcentajeIgv']) // 18%
                 ->setIgv($detail['igv'])
+                ->setFactorIcbper($detail['factorIcbper'] ?? null)
+                ->setIcbper($detail['icbper'] ?? null)
                 ->setTipAfeIgv($detail['tipAfeIgv']) // Gravado - Catalog. 07
                 ->setTotalImpuestos($detail['totalImpuestos'])
                 ->setMtoPrecioUnitario($detail['mtoPrecioUnitario']);
