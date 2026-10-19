@@ -13,6 +13,14 @@ class InvoiceController extends Controller
 {
     public function send(Request $request)
     {
+        $request->validate([
+            'company' => 'required|array',
+            'company.address' => 'required|array',
+            'client' => 'required|array',
+            'details' => 'required|array',
+            'details.*' => 'required|array',
+        ]);
+
         $data = $request->all();
 
         $company = Company::where('user_id', auth()->user()->id)->where('ruc', $data['company']['ruc'])->firstOrFail();
