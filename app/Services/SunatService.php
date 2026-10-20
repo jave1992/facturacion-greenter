@@ -4,13 +4,13 @@ namespace App\Services;
 
 use App\Models\Company as ModelsCompany;
 use DateTime;
-use Dompdf\Dompdf;
 use Greenter\Model\Client\Client;
 use Greenter\Model\Company\Address;
 use Greenter\Model\Company\Company;
 use Greenter\Model\Sale\FormaPagos\FormaPagoContado;
 use Greenter\Model\Sale\Invoice;
 use Greenter\Model\Sale\Legend;
+use Greenter\Model\Sale\Note;
 use Greenter\Model\Sale\SaleDetail;
 use Greenter\Report\HtmlReport;
 use Greenter\Report\PdfReport;
@@ -61,6 +61,36 @@ class SunatService
             ->setLegends($this->getLegends($data['legends']));
 
         return $invoice;
+    }
+
+    public function getNote($data){
+        $note = (new Note())
+            ->setUblVersion($data['ublVersion'] ?? '2.1') // UBL 2.1
+            ->setTipoDoc($data['tipoDoc'] ?? null)
+            ->setSerie($data['serie'] ?? null)
+            ->setCorrelativo($data['correlativo'] ?? null)
+            ->setFechaEmision(new DateTime($data['fechaEmision'] ?? null)) // Zona horaria: Lima
+            ->setTipDocAfectado($data['tipDocAfectado'] ?? null) // Tipo de documento afectado - Catalog. 01
+            ->setNumDocFectado($data['numDocFectado'] ?? null)
+            ->setCodMotivo($data['codMotivo'] ?? null) // Codigo de motivo de la nota - Catalog. 09
+            ->setDesMotivo($data['desMotivo'] ?? null) // Descripcion del motivo de la nota
+            ->setTipoMoneda($data['tipoMoneda'] ?? null)
+            ->setCompany($this->getCompany($data['company']))
+            ->setClient($this->getClient($data['client']))
+            ->setMtoOperGravadas($data['mtoOperGravadas'])
+            ->setMtoOperExoneradas($data['mtoOperExoneradas'])
+            ->setMtoOperInafectas($data['mtoOperInafectas'])
+            ->setMtoOperExportacion($data['mtoOperExportacion'])
+            ->setMtoIGV($data['mtoIGV'])
+            ->setTotalImpuestos($data['totalImpuestos'])
+            ->setValorVenta($data['valorVenta'])
+            ->setSubTotal($data['subTotal'])
+            ->setRedondeo($data['redondeo'])
+            ->setMtoImpVenta($data['mtoImpVenta'])
+            ->setDetails($this->getDetails($data['details']))
+            ->setLegends($this->getLegends($data['legends']));
+            
+        return $note;
     }
 
     public function getCompany($company)
@@ -164,16 +194,30 @@ class SunatService
         return $response;
     }
 
-    public function saveXml($company, $invoice, $see)
+    public function saveInvoiceXml($company, $invoice, $see)
     {
         $path_xml = 'invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.xml';
 
         Storage::put($path_xml, $see->getFactory()->getLastXml());
     }
 
-    public function saveCdr($company, $invoice, $result)
+    public function saveInvoiceCdr($company, $invoice, $result)
     {
-        $path_cdr = 'invoices/' . $company->ruc . '/' . $invoice->getName() . '/R-' . $invoice->getName() . '.zip';
+        $path_cdr = 'invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.zip';
+
+        Storage::put($path_cdr, $result->getCdrZip());
+    }
+
+    public function saveNoteXml($company, $invoice, $see)
+    {
+        $path_xml = 'notes/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.xml';
+
+        Storage::put($path_xml, $see->getFactory()->getLastXml());
+    }
+
+    public function saveNoteCdr($company, $invoice, $result)
+    {
+        $path_cdr = 'notes/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.zip';
 
         Storage::put($path_cdr, $result->getCdrZip());
     }
