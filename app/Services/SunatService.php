@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Company as ModelsCompany;
 use DateTime;
+use Greenter\Api;
 use Greenter\Model\Client\Client;
 use Greenter\Model\Company\Address;
 use Greenter\Model\Company\Company;
@@ -29,6 +30,33 @@ class SunatService
         $see->setClaveSOL($company->ruc, $company->sol_user, $company->sol_pass);
 
         return $see;
+    }
+
+    public function getSeeApi($company)
+    {
+        $api = new Api($company->production ? [
+            'auth' => 'https://api-seguridad.sunat.gob.pe/v1',
+            'cpe' => 'https://api-cpe.sunat.gob.pe/v1'
+        ] : [
+            'auth' => 'https://gre-test.nubefact.com/v1',
+            'cpe' => 'https://gre-test.nubefact.com/v1'
+        ]);
+
+        $api->setBuilderOptions([
+            'strict_variables' => true,
+            'optimizations' => 0,
+            'debug' => true,
+            'cache' => false,
+        ])->setApiCredentials(
+            $company->production ? $company->client_id : 'test-85e5b0ae-255c-4891-a595-0b98c65c9854',
+            $company->production ? $company->client_secret : 'test-Hty/M6QshYvPgItX2P0+Kw=='
+        )->setClaveSOL(
+            $company->ruc,
+            $company->production ? $company->sol_user : 'MODDATOS',
+            $company->production ? $company->sol_pass : 'MODDATOS'
+        )->setCertificate(Storage::get($company->cert_path));
+
+        return $api;
     }
 
     public function getInvoice($data)
