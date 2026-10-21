@@ -63,7 +63,8 @@ class SunatService
         return $invoice;
     }
 
-    public function getNote($data){
+    public function getNote($data)
+    {
         $note = (new Note())
             ->setUblVersion($data['ublVersion'] ?? '2.1') // UBL 2.1
             ->setTipoDoc($data['tipoDoc'] ?? null)
@@ -89,7 +90,7 @@ class SunatService
             ->setMtoImpVenta($data['mtoImpVenta'])
             ->setDetails($this->getDetails($data['details']))
             ->setLegends($this->getLegends($data['legends']));
-            
+
         return $note;
     }
 
@@ -196,37 +197,45 @@ class SunatService
 
     public function saveInvoiceXml($company, $invoice, $see)
     {
-        $path_xml = 'invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.xml';
+        if (!Storage::exists('invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.xml')) {
+            $path_xml = 'invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.xml';
 
-        Storage::put($path_xml, $see->getFactory()->getLastXml());
+            Storage::put($path_xml, $see->getFactory()->getLastXml());
+        }
     }
 
     public function saveInvoiceCdr($company, $invoice, $result)
     {
-        $path_cdr = 'invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.zip';
+        if (!Storage::exists('invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.zip')) {
+            $path_cdr = 'invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.zip';
 
-        Storage::put($path_cdr, $result->getCdrZip());
+            Storage::put($path_cdr, $result->getCdrZip());
+        }
     }
 
     public function saveNoteXml($company, $invoice, $see)
     {
-        $path_xml = 'notes/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.xml';
+        if (!Storage::exists('notes/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.xml')) {
+            $path_xml = 'notes/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.xml';
 
-        Storage::put($path_xml, $see->getFactory()->getLastXml());
+            Storage::put($path_xml, $see->getFactory()->getLastXml());
+        }
     }
 
     public function saveNoteCdr($company, $invoice, $result)
     {
-        $path_cdr = 'notes/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.zip';
+        if (!Storage::exists('notes/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.zip')) {
+            $path_cdr = 'notes/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.zip';
 
-        Storage::put($path_cdr, $result->getCdrZip());
+            Storage::put($path_cdr, $result->getCdrZip());
+        }
     }
 
-    public function generatePdfReport($invoice, $hash)
+    public function generatePdfReport($file, $hash)
     {
         $htmlReport = new HtmlReport();
         $resolver = new DefaultTemplateResolver();
-        $htmlReport->setTemplate($resolver->getTemplate($invoice));
+        $htmlReport->setTemplate($resolver->getTemplate($file));
 
         $report = new PdfReport($htmlReport);
         // Options: Ver mas en https://wkhtmltopdf.org/usage/wkhtmltopdf.txt
@@ -236,10 +245,10 @@ class SunatService
             'page-width' => '21cm',
             'page-height' => '29.7cm',
         ]);
-        
+
         $report->setBinPath(env('WKHTMLTOPDF')); // Ruta relativa o absoluta de wkhtmltopdf
 
-        $ruc = $invoice->getCompany()->getRuc();
+        $ruc = $file->getCompany()->getRuc();
         $company = ModelsCompany::where('ruc', $ruc)->where('user_id', auth()->user()->id)->first();
 
         // Los mismo parametros utilizados en HTML Report
@@ -259,7 +268,7 @@ class SunatService
             ]
         ];
 
-        $pdf = $report->render($invoice, $params);
+        $pdf = $report->render($file, $params);
 
         if ($pdf === null) {
             $error = $report->getExporter()->getError();
@@ -267,6 +276,8 @@ class SunatService
             return;
         }
 
-        Storage::put('invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.pdf', $pdf);
+        if (!Storage::exists('pdf/' . $company->ruc . '/' . $file->getName() . '/' . $file->getName() . '.pdf')) {
+            Storage::put('pdf/' . $company->ruc . '/' . $file->getName() . '/' . $file->getName() . '.pdf', $pdf);
+        }
     }
 }
