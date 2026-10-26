@@ -8,6 +8,13 @@ use Greenter\Api;
 use Greenter\Model\Client\Client;
 use Greenter\Model\Company\Address;
 use Greenter\Model\Company\Company;
+use Greenter\Model\Despatch\Despatch;
+use Greenter\Model\Despatch\DespatchDetail;
+use Greenter\Model\Despatch\Direction;
+use Greenter\Model\Despatch\Driver;
+use Greenter\Model\Despatch\Shipment;
+use Greenter\Model\Despatch\Transportist;
+use Greenter\Model\Despatch\Vehicle;
 use Greenter\Model\Sale\FormaPagos\FormaPagoContado;
 use Greenter\Model\Sale\Invoice;
 use Greenter\Model\Sale\Legend;
@@ -122,6 +129,22 @@ class SunatService
         return $note;
     }
 
+    public function getDespatch($data)
+    {
+        $despatch = (new Despatch)
+            ->setVersion($data['version'] ?? '2022')
+            ->setTipoDoc($data['tipoDoc'] ?? '09') // Guia de remision - Catalog. 01
+            ->setSerie($data['serie'] ?? null)
+            ->setCorrelativo($data['correlativo'] ?? null)
+            ->setFechaEmision(new DateTime($data['fechaEmision'] ?? null)) // Zona horaria: Lima
+            ->setCompany($this->getCompany($data['company']))
+            ->setDestinatario($this->getClient($data['destinatario']))
+            ->setEnvio($this->getEnvio($data['envio']))
+            ->setDetails($this->getDespatchDetails($data['details']));
+
+        return $despatch;
+    }
+
     public function getCompany($company)
     {
         $company = (new Company())
@@ -190,6 +213,100 @@ class SunatService
             $items[] = (new Legend())
                 ->setCode($legend['code'] ?? null) // Monto en letras - Catalog. 52
                 ->setValue($legend['value'] ?? null);
+        }
+
+        return $items;
+    }
+
+    public function getEnvio($data)
+    {
+        $shipment = (new Shipment)
+            ->setCodTraslado($data['codTraslado'] ?? null) // Catalog. 12
+            ->setModTraslado($data['modTraslado'] ?? null) // Catalog. 13
+            ->setFecTraslado(new DateTime($data['fecTraslado'] ?? null)) // Zona horaria: Lima
+            ->setPesoTotal($data['pesoTotal'] ?? null)
+            ->setUndPesoTotal($data['undPesoTotal'] ?? null) // Catalog. 14
+            ->setLlegada(new Direction($data['llegada']['ubigueo'], $data['llegada']['direccion']))
+            ->setPartida(new Direction($data['partida']['ubigueo'], $data['partida']['direccion']));
+
+        if ($data['modTraslado'] == '01') {
+            $shipment->setTransportista($this->getTransportista($data['transportista']));
+        }
+
+        if ($data['modTraslado'] == '02') {
+            $shipment->setVehiculo($this->getVehiculo($data['vehiculos']))
+                ->setChoferes($this->getChoferes($data['choferes']));
+        }
+
+        return $shipment;
+    }
+
+    public function getTransportista($data)
+    {
+        $transportista = (new Transportist)
+            ->setTipoDoc($data['tipoDoc'] ?? null) // RUC - Catalog. 06
+            ->setNumDoc($data['numDoc'] ?? null)
+            ->setRznSocial($data['rznSocial'] ?? null)
+            ->setNroMtc($data['nroMtc'] ?? null);
+
+        return $transportista;
+    }
+
+    public function getVehiculo($vehiculos)
+    {
+        $vehiculos = collect($vehiculos);
+
+        $secundarios = [];
+
+        foreach ($vehiculos->slice(1) as $vehiculo) {
+            $secundarios[] = (new Vehicle)
+                ->setPlaca($vehiculo['placa'] ?? null);
+        }
+
+        $vehiculo = (new Vehicle)
+            ->setPlaca($vehiculos->first()['placa'] ?? null)
+            ->setSecundarios($secundarios);
+
+        return $vehiculo;
+    }
+
+    public function getChoferes($choferes)
+    {
+        $choferes = collect($choferes);
+
+        $drivers = [];
+
+        $drivers[] = (new Driver)
+            ->setTipo('Principal')
+            ->setTipoDoc($choferes->first()['tipoDoc'] ?? null)
+            ->setNroDoc($choferes->first()['nroDoc'] ?? null)
+            ->setLicencia($choferes->first()['licencia'] ?? null)
+            ->setNombres($choferes->first()['nombres'] ?? null)
+            ->setApellidos($choferes->first()['apellidos'] ?? null);
+
+        foreach ($choferes->slice(1) as $chofer) {
+            $drivers[] = (new Driver)
+                ->setTipo('Secundario')
+                ->setTipoDoc($chofer['tipoDoc'] ?? null)
+                ->setNroDoc($chofer['nroDoc'] ?? null)
+                ->setLicencia($chofer['licencia'] ?? null)
+                ->setNombres($chofer['nombres'] ?? null)
+                ->setApellidos($chofer['apellidos'] ?? null);
+        }
+
+        return $drivers;
+    }
+
+    public function getDespatchDetails($details)
+    {
+        $items = [];
+
+        foreach ($details as $detail) {
+            $items[] = (new DespatchDetail)
+                ->setCantidad($detail['cantidad'] ?? null)
+                ->setUnidad($detail['unidad'] ?? null)
+                ->setDescripcion($detail['descripcion'] ?? null)
+                ->setCodigo($detail['codigo'] ?? null);
         }
 
         return $items;
