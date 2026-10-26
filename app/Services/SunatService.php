@@ -15,6 +15,7 @@ use Greenter\Model\Despatch\Driver;
 use Greenter\Model\Despatch\Shipment;
 use Greenter\Model\Despatch\Transportist;
 use Greenter\Model\Despatch\Vehicle;
+use Greenter\Model\Response\StatusResult;
 use Greenter\Model\Sale\FormaPagos\FormaPagoContado;
 use Greenter\Model\Sale\Invoice;
 use Greenter\Model\Sale\Legend;
@@ -342,37 +343,67 @@ class SunatService
 
     public function saveInvoiceXml($company, $invoice, $see)
     {
-        if (!Storage::exists('invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.xml')) {
-            $path_xml = 'invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.xml';
+        if ($see->getFactory()->getLastXml()) {
+            if (!Storage::exists('invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.xml')) {
+                $path_xml = 'invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.xml';
 
-            Storage::put($path_xml, $see->getFactory()->getLastXml());
+                Storage::put($path_xml, $see->getFactory()->getLastXml());
+            }
         }
     }
 
     public function saveInvoiceCdr($company, $invoice, $result)
     {
-        if (!Storage::exists('invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.zip')) {
-            $path_cdr = 'invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.zip';
+        if ($result->getCdrZip()) {
+            if (!Storage::exists('invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.zip')) {
+                $path_cdr = 'invoices/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.zip';
 
-            Storage::put($path_cdr, $result->getCdrZip());
+                Storage::put($path_cdr, $result->getCdrZip());
+            }
         }
     }
 
-    public function saveNoteXml($company, $invoice, $see)
+    public function saveNoteXml($company, $note, $see)
     {
-        if (!Storage::exists('notes/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.xml')) {
-            $path_xml = 'notes/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.xml';
+        if ($see->getFactory()->getLastXml()) {
+            if (!Storage::exists('notes/' . $company->ruc . '/' . $note->getName() . '/' . $note->getName() . '.xml')) {
+                $path_xml = 'notes/' . $company->ruc . '/' . $note->getName() . '/' . $note->getName() . '.xml';
 
-            Storage::put($path_xml, $see->getFactory()->getLastXml());
+                Storage::put($path_xml, $see->getFactory()->getLastXml());
+            }
         }
     }
 
-    public function saveNoteCdr($company, $invoice, $result)
+    public function saveNoteCdr($company, $note, $result)
     {
-        if (!Storage::exists('notes/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.zip')) {
-            $path_cdr = 'notes/' . $company->ruc . '/' . $invoice->getName() . '/' . $invoice->getName() . '.zip';
+        if ($result->getCdrZip()) {
+            if (!Storage::exists('notes/' . $company->ruc . '/' . $note->getName() . '/' . $note->getName() . '.zip')) {
+                $path_cdr = 'notes/' . $company->ruc . '/' . $note->getName() . '/' . $note->getName() . '.zip';
 
-            Storage::put($path_cdr, $result->getCdrZip());
+                Storage::put($path_cdr, $result->getCdrZip());
+            }
+        }
+    }
+
+    public function saveDespatchXml($company, $despatch, $api)
+    {
+        if ($api->getLastXml()) {
+            if (!Storage::exists('despatches/' . $company->ruc . '/' . $despatch->getName() . '/' . $despatch->getName() . '.xml')) {
+                $path_xml = 'despatches/' . $company->ruc . '/' . $despatch->getName() . '/' . $despatch->getName() . '.xml';
+
+                Storage::put($path_xml, $api->getLastXml());
+            }
+        }
+    }
+
+    public function saveDespatchCdr($company, $despatch, $result)
+    {
+        if ($result->getCdrZip()) {
+            if (!Storage::exists('despatches/' . $company->ruc . '/' . $despatch->getName() . '/' . $despatch->getName() . '.zip')) {
+                $path_cdr = 'despatches/' . $company->ruc . '/' . $despatch->getName() . '/' . $despatch->getName() . '.zip';
+
+                Storage::put($path_cdr, $result->getCdrZip());
+            }
         }
     }
 

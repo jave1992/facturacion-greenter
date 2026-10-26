@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\DespatchController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\NoteController;
 use App\Http\Controllers\Api\RegisterController;
@@ -22,3 +23,7 @@ Route::post('invoices/pdf', [InvoiceController::class, 'pdf'])->middleware('auth
 Route::post('notes/send', [NoteController::class, 'send'])->middleware('auth:api');
 Route::post('notes/xml', [NoteController::class, 'xml'])->middleware('auth:api');
 Route::post('notes/pdf', [NoteController::class, 'pdf'])->middleware('auth:api');
+
+Route::post('despatches/send', [DespatchController::class, 'send'])->middleware('auth:api');
+Route::post('despatches/xml', [DespatchController::class, 'xml'])->middleware('auth:api');
+Route::post('despatches/pdf', [DespatchController::class, 'pdf'])->middleware('auth:api');
