@@ -24,7 +24,7 @@ class DespatchController extends Controller
 
         $ticket = $result->getTicket();
         $result = $api->getStatus($ticket);
-
+        
         $sunat->saveDespatchXml($company, $despatch, $api);
         $sunat->saveDespatchCdr($company, $despatch, $result);
 

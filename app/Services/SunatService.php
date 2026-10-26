@@ -47,7 +47,7 @@ class SunatService
             'cpe' => 'https://api-cpe.sunat.gob.pe/v1'
         ] : [
             'auth' => 'https://gre-test.nubefact.com/v1',
-            'cpe' => 'https://gre-test.nubefact.com/v1'
+            'cpe' => 'https://gre-test.nubefact.com/v1',
         ]);
 
         $api->setBuilderOptions([
