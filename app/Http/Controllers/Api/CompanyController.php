@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Rules\UniqueRucRule;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class CompanyController extends Controller
@@ -15,7 +16,7 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        $companies = Company::where('user_id', auth()->user()->id)->get();
+        $companies = Company::where('user_id', Auth::id())->get();
 
         return response()->json($companies, 200);
     }
@@ -48,7 +49,7 @@ class CompanyController extends Controller
         }
 
         $data['cert_path'] = $request->file('cert')->store('certs');
-        $data['user_id'] = JWTAuth::user()->id;
+        $data['user_id'] = Auth::id();
 
         $company = Company::create($data);
 
@@ -60,7 +61,7 @@ class CompanyController extends Controller
      */
     public function show($company)
     {
-        $company = Company::where('ruc', $company)->where('user_id', auth()->user()->id)->firstOrFail();
+        $company = Company::where('ruc', $company)->where('user_id', Auth::id())->firstOrFail();
 
         return response()->json($company, 200);
     }
@@ -70,7 +71,7 @@ class CompanyController extends Controller
      */
     public function update(Request $request, $company)
     {
-        $company = Company::where('ruc', $company)->where('user_id', auth()->user()->id)->firstOrFail();
+        $company = Company::where('ruc', $company)->where('user_id', Auth::id())->firstOrFail();
 
         $data = $request->validate([
             'razon_social' => 'nullable|string|min:5',
@@ -108,7 +109,7 @@ class CompanyController extends Controller
      */
     public function destroy($company)
     {
-        $company = Company::where('ruc', $company)->where('user_id', auth()->user()->id)->firstOrFail();
+        $company = Company::where('ruc', $company)->where('user_id', Auth::id())->firstOrFail();
 
         $company->delete();
 

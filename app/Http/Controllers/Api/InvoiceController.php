@@ -8,6 +8,7 @@ use App\Services\SunatService;
 use App\Traits\SunatTrait;
 use Greenter\Report\XmlUtils;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class InvoiceController extends Controller
 {
@@ -25,7 +26,7 @@ class InvoiceController extends Controller
 
         $data = $request->all();
 
-        $company = Company::where('user_id', auth()->user()->id)->where('ruc', $data['company']['ruc'])->firstOrFail();
+        $company = Company::where('user_id', Auth::id())->where('ruc', $data['company']['ruc'])->firstOrFail();
 
         $this->setTotales($data);
         $this->setLeyendas($data);
@@ -61,7 +62,7 @@ class InvoiceController extends Controller
 
         $data = $request->all();
 
-        $company = Company::where('user_id', auth()->user()->id)->where('ruc', $data['company']['ruc'])->firstOrFail();
+        $company = Company::where('user_id', Auth::id())->where('ruc', $data['company']['ruc'])->firstOrFail();
 
         $this->setTotales($data);
         $this->setLeyendas($data);
@@ -90,7 +91,7 @@ class InvoiceController extends Controller
 
         $data = $request->all();
 
-        $company = Company::where('user_id', auth()->user()->id)->where('ruc', $data['company']['ruc'])->firstOrFail();
+        $company = Company::where('user_id', Auth::id())->where('ruc', $data['company']['ruc'])->firstOrFail();
 
         $this->setTotales($data);
         $this->setLeyendas($data);

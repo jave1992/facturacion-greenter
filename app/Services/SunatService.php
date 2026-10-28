@@ -26,6 +26,7 @@ use Greenter\Report\PdfReport;
 use Greenter\Report\Resolver\DefaultTemplateResolver;
 use Greenter\See;
 use Greenter\Ws\Services\SunatEndpoints;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class SunatService
@@ -425,7 +426,7 @@ class SunatService
         $report->setBinPath(env('WKHTMLTOPDF')); // Ruta relativa o absoluta de wkhtmltopdf
 
         $ruc = $file->getCompany()->getRuc();
-        $company = ModelsCompany::where('ruc', $ruc)->where('user_id', auth()->user()->id)->first();
+        $company = ModelsCompany::where('ruc', $ruc)->where('user_id', Auth::id())->first();
 
         // Los mismo parametros utilizados en HTML Report
         $params = [
