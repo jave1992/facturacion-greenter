@@ -408,6 +408,35 @@ class SunatService
         }
     }
 
+    public function getHtmlReport($file, $hash)
+    {
+        $report = new HtmlReport();
+
+        $resolver = new DefaultTemplateResolver();
+        $report->setTemplate($resolver->getTemplate($file));
+
+        $ruc = $file->getCompany()->getRuc();
+        $company = ModelsCompany::where('ruc', $ruc)->first();
+
+        $params = [
+            'system' => [
+                'logo' => Storage::get($company->logo_path), // Logo de Empresa
+                'hash' => $hash, // Valor Resumen 
+            ],
+            'user' => [
+                'header'     => 'Telf: <b>(01) 123375</b>', // Texto que se ubica debajo de la dirección de empresa
+                'extras'     => [
+                    // Leyendas adicionales
+                    ['name' => 'CONDICION DE PAGO', 'value' => 'Efectivo'],
+                    ['name' => 'VENDEDOR', 'value' => 'PRUEBA S.A.C.'],
+                ],
+                'footer' => '<p>Nro Resolucion: <b>3232323</b></p>'
+            ]
+        ];
+
+        return $report->render($file, $params);
+    }
+
     public function generatePdfReport($file, $hash)
     {
         $htmlReport = new HtmlReport();

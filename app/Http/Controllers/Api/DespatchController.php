@@ -21,6 +21,7 @@ class DespatchController extends Controller
         $despatch = $sunat->getDespatch($data);
 
         $api = $sunat->getSeeApi($company);
+        /** @var \Greenter\Model\Response\SummaryResult $result */
         $result = $api->send($despatch);
 
         $ticket = $result->getTicket();
@@ -54,5 +55,22 @@ class DespatchController extends Controller
         return response()->json($response, 200);
     }
 
-    public function pdf(Request $request) {}
+    public function pdf(Request $request)
+    {
+        $data = $request->all();
+
+        $company = Company::where('user_id', Auth::id())->where('ruc', $data['company']['ruc'])->firstOrFail();
+
+        $sunat = new SunatService();
+        $see = $sunat->getSee($company);
+        $despatch = $sunat->getDespatch($data);
+
+        $result = $see->send($despatch);
+
+        $response = $sunat->sunatResponse($result);
+
+        $hash = (new XmlUtils)->getHashSign($see->getFactory()->getLastXml());
+
+        $sunat->generatePdfReport($despatch, $hash);
+    }
 }
