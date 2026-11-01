@@ -5,6 +5,7 @@ namespace App\Rules;
 use App\Models\Company;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Translation\PotentiallyTranslatedString;
 
 class UniqueRucRule implements ValidationRule
@@ -24,7 +25,7 @@ class UniqueRucRule implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         $company = Company::where('ruc', $value)
-            ->where('user_id', auth()->user()->id)
+            ->where('user_id', Auth::id())
             ->when($this->company_id, function ($query, $company_id) {
                 $query->where('id', '!=', $company_id);
             })
